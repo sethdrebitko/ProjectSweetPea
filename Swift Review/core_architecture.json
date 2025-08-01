@@ -1,0 +1,25 @@
+{
+  "filename": "core.h",
+  "file_type": "header",
+  "primary_purpose": "Defines the internal core state structure (`tic_core`) that glues together TIC-80 memory, audio, video, and scripting subsystems as well as per-frame processing helpers.",
+  "key_structures": [
+    {"name": "tic_sound_register_data", "type": "struct", "description": "Holds intermediate sound synthesis parameters (time, phase, amplitude) for a single register.", "dependencies": ["s32"]},
+    {"name": "tic_channel_data", "type": "struct", "description": "Runtime playback state for a single SFX channel – note index, volume balance, speed, etc.", "dependencies": ["tic_sfx_pos", "SFX_SPEED_BITS"]},
+    {"name": "tic_command_data", "type": "struct", "description": "Aggregated timing state for effect commands (chord, vibrato, slide, fine-pitch, delay).", "dependencies": ["tic_track_row"]},
+    {"name": "tic_jump_command", "type": "struct", "description": "Used by music player to perform pattern/frame jumps.", "dependencies": []},
+    {"name": "tic_core_state_data", "type": "struct", "description": "Snapshot-able gameplay state that can be serialized for pause or rewind (input history, sound ring-buffers, VRAM bank, clipping, etc.).", "dependencies": ["tic80_gamepads", "tic80_keyboard", "tic_sound_register", "tic_pcm", "tic_channel_data", "tic_command_data"]},
+    {"name": "tic_core", "type": "struct", "description": "Top-level core object used by the engine. Contains `tic_mem`, current VM pointer, Blip buffers, samplerate, active API table, and nested state copy for pause/resume.", "dependencies": ["tic_mem", "tic_script", "tic_tick_data", "tic_core_state_data"]}
+  ],
+  "public_api": [
+    {"name": "tic_core_tick_io", "signature": "void tic_core_tick_io(tic_mem* memory)", "purpose": "Poll input devices and handle IO side-effects for one frame."},
+    {"name": "tic_core_sound_tick_start", "signature": "void tic_core_sound_tick_start(tic_mem* memory)", "purpose": "Prepare sound subsystem before executing audio processing for the frame (reset ring-buffers, etc.)."},
+    {"name": "tic_core_sound_tick_end", "signature": "void tic_core_sound_tick_end(tic_mem* memory)", "purpose": "Finalize audio processing for the frame (mix channels, push into Blip buffers)."}
+  ],
+  "memory_regions": [
+    {"name": "tic_core.state.sound_ringbuf", "size": "TIC_SOUND_RINGBUF_LEN * sizeof(struct sound_ring_buf)", "purpose": "Ring buffer with pre-mixed audio registers and PCM for latency hiding."},
+    {"name": "tic_core.memory", "size": "sizeof(tic_mem)", "purpose": "Core memory region including RAM, VRAM, cart ROM, etc."},
+    {"name": "tic_core.pause", "size": "≈ same as tic_core_state_data + ram snapshot", "purpose": "Backup of state when console is paused to allow single-step debugging."}
+  ],
+  "swift_conversion_priority": "critical",
+  "notes": "While `core.h` is not exposed publicly, its structures dictate how the runtime behaves. Swift port will need an equivalent `CoreState` and `Core` class to allow pause/resume, rewinding, and deterministic recording. But these can stay on the C++/C side with Swift bridging only to the higher-level API table; therefore, many internals can remain opaque in Swift unless deep integration (e.g., custom debugger) is required."
+}

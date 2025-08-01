@@ -18,7 +18,7 @@
 - [ ] tic80_source/src/cart.h
 - [ ] tic80_source/src/core/altfont.inl
 - [ ] tic80_source/src/core/core.c
-- [ ] tic80_source/src/core/core.h
+- [x] tic80_source/src/core/core.h
 - [ ] tic80_source/src/core/draw.c
 - [ ] tic80_source/src/core/draw_dep.c
 - [ ] tic80_source/src/core/font.inl

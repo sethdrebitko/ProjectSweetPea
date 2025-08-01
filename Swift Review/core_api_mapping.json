@@ -1,0 +1,41 @@
+{
+  "filename": "core.h",
+  "api_mappings": [
+    {
+      "c_function": "tic_core_tick_io",
+      "c_signature": "void tic_core_tick_io(tic_mem* memory)",
+      "swift_equivalent": "Core.tickIO(memory:)",
+      "spritekit_approach": "Mostly handles input; can remain in C and be called via bridging function before each frame tick.",
+      "implementation_notes": "Wrap call inside TIC80Engine before tick.",
+      "complexity": "simple"
+    },
+    {
+      "c_function": "tic_core_sound_tick_start",
+      "c_signature": "void tic_core_sound_tick_start(tic_mem* memory)",
+      "swift_equivalent": "Core.startSoundTick(memory:)",
+      "spritekit_approach": "Prepare ring buffers; no SpriteKit.",
+      "implementation_notes": "Called immediately before tick to reset audio accumulators.",
+      "complexity": "simple"
+    },
+    {
+      "c_function": "tic_core_sound_tick_end",
+      "c_signature": "void tic_core_sound_tick_end(tic_mem* memory)",
+      "swift_equivalent": "Core.endSoundTick(memory:)",
+      "spritekit_approach": "Mix channels and push to AudioKit buffer.",
+      "implementation_notes": "Called after tick.",
+      "complexity": "simple"
+    }
+  ],
+  "data_structure_mappings": [
+    {"c_struct": "tic_core", "swift_equivalent": "class", "properties": ["memory", "state", "samplerate", "api"], "special_considerations": "Large struct (~4KB+); keep in C for performance; Swift holds UnsafeMutablePointer."}
+  ],
+  "dependencies_needed": [
+    {"framework": "SpriteKit", "reason": "Only indirectly via TIC80Engine tick loop."},
+    {"framework": "AudioKit", "reason": "Sound ring buffer consumption."}
+  ],
+  "implementation_order": [
+    "Expose minimal bridging wrappers for tickIO/startSoundTick/endSoundTick",
+    "Integrate calls within TIC80.tick() surrounding tic80_tick",
+    "Verify audio pipeline latency"
+  ]
+}

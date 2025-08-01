@@ -1,0 +1,17 @@
+{
+  "filename": "core.h",
+  "memory_analysis": {
+    "total_memory": "Size of tic_core struct (~ several KB) plus dynamic Blip buffers and ring buffers.",
+    "memory_segments": [
+      {"name": "tic_core.memory", "offset": "0", "size": "≈ 128KB", "purpose": "Contains VRAM, RAM, cart ROM.", "access_pattern": "readwrite", "swift_representation": "UnsafeMutablePointer<tic_mem>"},
+      {"name": "sound_ringbuf", "offset": "state.sound_ringbuf", "size": "TIC_SOUND_RINGBUF_LEN * sizeof(sound_ring_buf)", "purpose": "Pre-mixed audio for latency smoothing.", "access_pattern": "write per frame / read by audio thread", "swift_representation": "UnsafeMutablePointer<sound_ring_buf>"},
+      {"name": "blip.left/right", "offset": "blip", "size": "dynamic (BlipBuf)", "purpose": "Sample rate conversion from 60Hz ticks to 44.1kHz output.", "access_pattern": "write per frame / read by audio engine", "swift_representation": "Opaque C object pointer"}
+    ],
+    "critical_memory_operations": [
+      {"operation": "RingBuffer Enqueue", "c_implementation": "Increment head, write registers, wrap via modulo.", "swift_approach": "No conversion; access remains in C. Provide API to pop latest buffer when audio engine requests."}
+    ]
+  },
+  "performance_considerations": [
+    {"area": "BlipBuf mixing", "c_approach": "Uses integer accumulators; may allocate on heap.", "swift_optimization": "Keep mixing in C; call once per frame to fill preallocated buffer."}
+  ],
+  "memory_safety_notes": "Swift never touches internal arrays directly; interacts via vetted helper functions to avoid undefined behaviour."}

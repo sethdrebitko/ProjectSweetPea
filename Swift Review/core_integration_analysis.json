@@ -1,0 +1,20 @@
+{
+  "filename": "core.h",
+  "integration_analysis": {
+    "component_relationships": [
+      {"this_component": "Core", "depends_on": ["tic_mem", "tic_sound_register"], "provides_to": ["TIC80 Wrapper"], "communication_method": "Direct struct access via UnsafeMutablePointer"}
+    ],
+    "data_flow": [
+      {"from": "Core", "to": "BlipBuf", "data_type": "PCM register deltas", "frequency": "per_frame"},
+      {"from": "Core", "to": "TIC80 Wrapper", "data_type": "state snapshot", "frequency": "on_pause"}
+    ],
+    "swift_architecture_recommendations": {
+      "overall_pattern": "Layered", "key_protocols": [], "singleton_candidates": [], "delegation_patterns": []
+    }
+  },
+  "unified_class_hierarchy": [
+    {"class_name": "Core", "parent_class": "NSObject", "protocols": [], "primary_responsibility": "Manage low-level runtime state."}
+  ],
+  "critical_integration_points": ["Audio ring buffer pop"],
+  "architecture_validation": "Core remains mostly in C layer with minimal Swift exposure, reducing bridging overhead."
+}

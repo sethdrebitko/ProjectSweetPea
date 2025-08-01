@@ -1,0 +1,23 @@
+{
+  "filename": "core.h",
+  "implementation_plan": {
+    "swift_class_design": {
+      "primary_class": "Core",
+      "protocols": [],
+      "key_properties": ["pointer: UnsafeMutablePointer<tic_core>", "ringBufferIndex: Int"],
+      "key_methods": ["tickIO()", "startSoundTick()", "endSoundTick()"]
+    },
+    "code_patterns": [
+      {"pattern_name": "CStructOpaque", "swift_code_template": "final class Core { private var ptr: UnsafeMutablePointer<tic_core> }", "usage_notes": "Encapsulates internal state; only bridging methods exposed."}
+    ],
+    "integration_points": [
+      {"component": "TIC80", "integration_method": "Owns Core pointer or includes inside tic80 struct.", "dependencies": ["C bridging"]}
+    ]
+  },
+  "mvp_requirements": [
+    {"feature": "Input polling", "priority": "must_have", "implementation_complexity": "low", "estimated_effort": "0.5d"},
+    {"feature": "Audio ring buffer", "priority": "must_have", "implementation_complexity": "medium", "estimated_effort": "1d"}
+  ],
+  "testing_strategy": "Create unit tests verifying ring buffer wrap-around and sample counts using Swift bridging.",
+  "potential_issues": ["Audio underrun if ring buffer head/tail mis-synced", "C struct changes across TIC-80 versions"]
+}
