@@ -1,0 +1,32 @@
+{
+  "filename": "tic80.h",
+  "integration_analysis": {
+    "component_relationships": [
+      {
+        "this_component": "TIC80 Runtime Core",
+        "depends_on": ["Host callbacks", "Input snapshot"],
+        "provides_to": ["Rendering subsystem", "Audio subsystem"],
+        "communication_method": "Shared memory buffers and function calls"
+      }
+    ],
+    "data_flow": [
+      {"from": "Gamepad/Keyboard/Mouse", "to": "tic80_tick", "data_type": "tic80_input", "frequency": "per_frame"},
+      {"from": "tic80_tick", "to": "FrameBuffer", "data_type": "pixel array", "frequency": "per_frame"},
+      {"from": "tic80_tick", "to": "AudioSamples", "data_type": "PCM samples", "frequency": "per_frame"},
+      {"from": "FrameBuffer", "to": "SpriteKit", "data_type": "SKTexture", "frequency": "per_frame"},
+      {"from": "AudioSamples", "to": "AudioKit", "data_type": "PCM buffer", "frequency": "per_frame"}
+    ],
+    "swift_architecture_recommendations": {
+      "overall_pattern": "Component",
+      "key_protocols": ["Renderable", "AudioSource", "InputReceivable"],
+      "singleton_candidates": ["TIC80Engine"],
+      "delegation_patterns": ["TIC80EngineDelegate" ]
+    }
+  },
+  "unified_class_hierarchy": [
+    {"class_name": "TIC80Engine", "parent_class": "NSObject", "protocols": ["SKSceneDelegate"], "primary_responsibility": "Own TIC80 instance, coordinate rendering and audio."},
+    {"class_name": "TIC80", "parent_class": "NSObject", "protocols": ["Renderable", "AudioSource"], "primary_responsibility": "Swift wrapper around C core."}
+  ],
+  "critical_integration_points": ["SKScene.update", "AudioKit render callback", "Lifecycle (create/destroy)"],
+  "architecture_validation": "Design isolates unsafe C interaction inside TIC80 wrapper, uses protocols for high-level engine, and adheres to component pattern facilitating testability."
+}

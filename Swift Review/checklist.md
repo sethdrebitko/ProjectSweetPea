@@ -1,3 +1,4 @@
+- [x] tic80_source/include/tic80.h
 - [ ] tic80_source/src/api/fennel.c
 - [ ] tic80_source/src/api.h
 - [ ] tic80_source/src/api/janet.c

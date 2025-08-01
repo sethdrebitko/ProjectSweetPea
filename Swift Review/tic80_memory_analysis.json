@@ -1,0 +1,57 @@
+{
+  "filename": "tic80.h",
+  "memory_analysis": {
+    "total_memory": "Dynamic – allocated internally by tic80_create; exposed buffers are screen (≈960×136×4 bytes) and audio samples (configurable).",
+    "memory_segments": [
+      {
+        "name": "FrameBuffer (screen)",
+        "offset": "Provided as pointer in tic80 struct; actual offset opaque",
+        "size": "TIC80_FULLWIDTH * TIC80_FULLHEIGHT * 4 bytes ≈ 131kB",
+        "purpose": "RGBA8888 pixel data rendered each frame.",
+        "access_pattern": "readwrite",
+        "swift_representation": "UnsafeMutableBufferPointer<UInt32>"
+      },
+      {
+        "name": "AudioSamples",
+        "offset": "tic80.samples.buffer",
+        "size": "samples.count * 2 bytes * 2 channels",
+        "purpose": "16-bit interleaved stereo PCM sample buffer generated per-tick.",
+        "access_pattern": "readwrite",
+        "swift_representation": "UnsafeMutableBufferPointer<Int16>"
+      },
+      {
+        "name": "CallbacksBlock",
+        "offset": "tic80.callback",
+        "size": "sizeof(void*) * 3",
+        "purpose": "Function pointers for trace/error/exit handlers provided by host.",
+        "access_pattern": "write once then read",
+        "swift_representation": "Swift closures bridged via C function wrappers"
+      }
+    ],
+    "critical_memory_operations": [
+      {
+        "operation": "Frame Buffer Update",
+        "c_implementation": "Writes 32-bit pixel values directly each game frame.",
+        "swift_approach": "Map buffer into an SKTexture via withUnsafeBytes to avoid copy; use texture.replaceRegion each frame."
+      },
+      {
+        "operation": "Audio Buffer Consumption",
+        "c_implementation": "Fills samples.buffer during tick or sound call.",
+        "swift_approach": "Stream PCM data into AudioKit or AVAudioEngine with zero-copy when possible; pointer lifetime carefully managed."
+      }
+    ]
+  },
+  "performance_considerations": [
+    {
+      "area": "Texture upload",
+      "c_approach": "No GPU involvement; raw memory.",
+      "swift_optimization": "Use shared MTLTexture on iOS/macOS and call replaceRegion with no intermediate copy; throttle to 60Hz."
+    },
+    {
+      "area": "Audio latency",
+      "c_approach": "Generates PCM per frame (735 samples @ 44.1kHz).",
+      "swift_optimization": "Buffer ahead two frames in AudioKit to avoid underruns; use realtime thread priority."
+    }
+  ],
+  "memory_safety_notes": "All C pointers must be treated as UnsafeMutablePointer; ensure Swift wrapper retains TIC80 struct until all audio callbacks complete; avoid accessing after tic80_delete."
+}

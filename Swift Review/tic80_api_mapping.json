@@ -1,0 +1,72 @@
+{
+  "filename": "tic80.h",
+  "api_mappings": [
+    {
+      "c_function": "tic80_create",
+      "c_signature": "tic80* tic80_create(s32 samplerate, tic80_pixel_color_format format)",
+      "swift_equivalent": "TIC80.create(samplerate:format:)",
+      "spritekit_approach": "Allocate frame buffer as SKTexture backing; pass UnsafeMutableBufferPointer to C backend.",
+      "implementation_notes": "Wrap returned pointer in unmanaged Swift class; ensure deinit calls tic80_delete.",
+      "complexity": "moderate"
+    },
+    {
+      "c_function": "tic80_load",
+      "c_signature": "void tic80_load(tic80* tic, void* cart, s32 size)",
+      "swift_equivalent": "TIC80.load(cartData:)",
+      "spritekit_approach": "Load Data object, pass as UnsafeRawPointer.",
+      "implementation_notes": "Validate size vs Data.count; convert to [UInt8].",
+      "complexity": "simple"
+    },
+    {
+      "c_function": "tic80_tick",
+      "c_signature": "void tic80_tick(tic80* tic, tic80_input input, u64 (*counter)(), u64 (*freq)())",
+      "swift_equivalent": "TIC80.tick(input:counter:freq:)",
+      "spritekit_approach": "Called each frame from SKScene.update; update texture with new pixel buffer; schedule audio via AudioKit.",
+      "implementation_notes": "Need bridging closures for counter/freq; can use mach_absolute_time.",
+      "complexity": "complex"
+    },
+    {
+      "c_function": "tic80_sound",
+      "c_signature": "void tic80_sound(tic80* tic)",
+      "swift_equivalent": "TIC80.generateSound()",
+      "spritekit_approach": "Retrieve tic.samples.buffer and feed into AudioKit node.",
+      "implementation_notes": "Useful when tick not used; still need periodic call.",
+      "complexity": "moderate"
+    },
+    {
+      "c_function": "tic80_delete",
+      "c_signature": "void tic80_delete(tic80* tic)",
+      "swift_equivalent": "TIC80.destroy()",
+      "spritekit_approach": "Nil out texture and audio nodes, free C memory.",
+      "implementation_notes": "Must be called from deinit to avoid leaks.",
+      "complexity": "simple"
+    }
+  ],
+  "data_structure_mappings": [
+    {
+      "c_struct": "tic80",
+      "swift_equivalent": "class",
+      "properties": ["screen: UnsafeMutableBufferPointer<UInt32>", "samples: UnsafeMutableBufferPointer<Int16>", "callbacks"] ,
+      "special_considerations": "Memory owned by C; Swift wrapper only holds pointer."
+    },
+    {
+      "c_struct": "tic80_input",
+      "swift_equivalent": "struct",
+      "properties": ["gamepads", "mouse", "keyboard"],
+      "special_considerations": "Mirrored Layout with @frozen and `@_alignment(4)` if needed for C ABI."
+    }
+  ],
+  "dependencies_needed": [
+    {"framework": "SpriteKit", "reason": "Render frame buffer as texture and display on SKScene."},
+    {"framework": "AudioKit", "reason": "Stream generated PCM samples to audio output."},
+    {"framework": "Foundation", "reason": "Data handling, bridging pointers."}
+  ],
+  "implementation_order": [
+    "Define Swift representations of enums and structs",
+    "Implement TIC80 wrapper class with create/destroy",
+    "Implement load(cartData)",
+    "Integrate rendering using SpriteKit texture update",
+    "Integrate audio pipeline with AudioKit",
+    "Implement per-frame tick loop in SKScene.update"
+  ]
+}

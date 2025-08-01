@@ -1,0 +1,43 @@
+{
+  "filename": "tic80.h",
+  "implementation_plan": {
+    "swift_class_design": {
+      "primary_class": "TIC80",
+      "protocols": ["Renderable", "AudioSource"],
+      "key_properties": ["pointer: UnsafeMutablePointer<tic80>", "texture: SKTexture", "audioNode: AKNode", "input: TIC80Input"],
+      "key_methods": ["init(samplerate:format:)", "load(cartData:)", "tick(deltaTime:)", "generateSound()", "destroy()"]
+    },
+    "code_patterns": [
+      {
+        "pattern_name": "PointerWrapper",
+        "swift_code_template": "class TIC80 { private var ptr: UnsafeMutablePointer<tic80>! /* manage in init/deinit */ }",
+        "usage_notes": "Ensures memory ownership and safe bridging."
+      },
+      {
+        "pattern_name": "SKTextureStreaming",
+        "swift_code_template": "texture.replace(region:..., mipmapLevel:0, withBytes: ptr.screen, bytesPerRow: width*4)",
+        "usage_notes": "Efficient per-frame upload without CPU copy."
+      }
+    ],
+    "integration_points": [
+      {
+        "component": "GameScene",
+        "integration_method": "Call tic.tick(input:counter:freq:) in SKScene.update",
+        "dependencies": ["SpriteKit"]
+      },
+      {
+        "component": "AudioEngine",
+        "integration_method": "Pull PCM from tic.samples.buffer in render callback.",
+        "dependencies": ["AudioKit"]
+      }
+    ]
+  },
+  "mvp_requirements": [
+    {"feature": "Load and run cartridge", "priority": "must_have", "implementation_complexity": "medium", "estimated_effort": "2d"},
+    {"feature": "Render framebuffer", "priority": "must_have", "implementation_complexity": "medium", "estimated_effort": "1d"},
+    {"feature": "Gamepad input", "priority": "should_have", "implementation_complexity": "low", "estimated_effort": "0.5d"},
+    {"feature": "Audio output", "priority": "must_have", "implementation_complexity": "high", "estimated_effort": "2d"}
+  ],
+  "testing_strategy": "Unit-test Swift wrappers for null pointer safety; integration tests that load sample cart and verify first frame hash and audio RMS.",
+  "potential_issues": ["Pointer lifetime bugs", "Texture upload bandwidth", "Audio drift if frame rate deviates"]
+}
