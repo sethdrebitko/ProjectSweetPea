@@ -1,0 +1,90 @@
+{
+  "filename": "tic80.h",
+  "file_type": "header",
+  "primary_purpose": "Defines the public TIC-80 runtime API, core constants, input structures, and minimal function set for embedding the virtual console.",
+  "key_structures": [
+    {
+      "name": "tic80",
+      "type": "struct",
+      "description": "Opaque handle representing a running TIC-80 instance. Holds callbacks, audio sample buffer, and pointer to frame buffer.",
+      "dependencies": ["TIC80_SAMPLETYPE", "u32"]
+    },
+    {
+      "name": "tic80_pixel_color_format",
+      "type": "enum",
+      "description": "Pixel color channel ordering supported by the runtime when exposing the frame buffer.",
+      "dependencies": []
+    },
+    {
+      "name": "tic80_gamepad",
+      "type": "union",
+      "description": "Bit-field view of a single gamepad state, encoded in 8-bit integer for compact storage.",
+      "dependencies": ["u8"]
+    },
+    {
+      "name": "tic80_gamepads",
+      "type": "union",
+      "description": "Aggregate type for four gamepads as a single 32-bit integer or individual structs.",
+      "dependencies": ["tic80_gamepad", "u32"]
+    },
+    {
+      "name": "tic80_mouse",
+      "type": "struct",
+      "description": "Mouse position (absolute or relative), scroll deltas, and button state encoded in 16-bit bit-field.",
+      "dependencies": ["u8", "u16", "s8", "s16"]
+    },
+    {
+      "name": "tic80_keyboard",
+      "type": "union",
+      "description": "Ring-buffer of recent key codes plus 32-bit packed view.",
+      "dependencies": ["tic_key", "u32"]
+    },
+    {
+      "name": "tic80_input",
+      "type": "struct",
+      "description": "Snapshot of all input devices (gamepads, mouse, keyboard). Passed to tick function each frame.",
+      "dependencies": ["tic80_gamepads", "tic80_mouse", "tic80_keyboard"]
+    }
+  ],
+  "public_api": [
+    {
+      "name": "tic80_create",
+      "signature": "tic80* tic80_create(s32 samplerate, tic80_pixel_color_format format)",
+      "purpose": "Allocate and initialise a new TIC-80 instance with given audio sample rate and frame-buffer pixel format."
+    },
+    {
+      "name": "tic80_load",
+      "signature": "void tic80_load(tic80* tic, void* cart, s32 size)",
+      "purpose": "Load a serialized cartridge image into the given TIC-80 instance."
+    },
+    {
+      "name": "tic80_tick",
+      "signature": "void tic80_tick(tic80* tic, tic80_input input, u64 (*counter)(), u64 (*freq)())",
+      "purpose": "Run one full frame of the virtual console, processing input and executing game code; produces new frame buffer and audio samples."
+    },
+    {
+      "name": "tic80_sound",
+      "signature": "void tic80_sound(tic80* tic)",
+      "purpose": "Generate audio for the current frame (call when not using tick)."
+    },
+    {
+      "name": "tic80_delete",
+      "signature": "void tic80_delete(tic80* tic)",
+      "purpose": "Destroy the TIC-80 instance and release all allocated memory."
+    }
+  ],
+  "memory_regions": [
+    {
+      "name": "screen",
+      "size": "TIC80_FULLWIDTH * TIC80_FULLHEIGHT * sizeof(u32)",
+      "purpose": "32-bit RGBA pixel frame buffer written every frame."
+    },
+    {
+      "name": "samples.buffer",
+      "size": "samples.count * sizeof(TIC80_SAMPLETYPE)",
+      "purpose": "Interleaved stereo audio samples generated each tick (44.1 kHz default)."
+    }
+  ],
+  "swift_conversion_priority": "critical",
+  "notes": "This header is the primary gateway between host application and TIC-80 core. Swift wrappers should mirror these structures (possibly using `struct` for plain data and `class` for owning handle) and provide safe Swift interfaces while managing C memory ownership via `UnsafeMutablePointer`."
+}
