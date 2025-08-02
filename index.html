@@ -47,13 +47,35 @@
 
         const gameFrame = document.getElementById('game-frame')
 
-        gameFrame.addEventListener('click', function() {
+        // Attempt to resume the TIC-80 audio context.  If the context isn't
+        // ready yet or remains suspended, listen for another user gesture and
+        // try again.
+        function tryResumeAudio() {
+            var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume();
+            }
+            if (!ctx || ctx.state === 'suspended') {
+                document.addEventListener('pointerdown', tryResumeAudio, {
+                    once: true,
+                    passive: true
+                });
+            }
+        }
+
+        function loadGame() {
             let scriptTag = document.createElement('script'), // create a script tag
             firstScriptTag = document.getElementsByTagName('script')[0]; // find the first script tag in the document
             scriptTag.src = 'tic80.js'; // set the source of the script to your script
+            scriptTag.onload = tryResumeAudio;
             firstScriptTag.parentNode.insertBefore(scriptTag, firstScriptTag); // append the script to the DOM
-            this.remove()
-        });
+            gameFrame.remove();
+        }
+
+        // Use pointerdown so trackpad taps and touch events trigger the loader.
+        gameFrame.addEventListener('pointerdown', loadGame, { once: true });
+        // Fallback for environments that only emit click events.
+        gameFrame.addEventListener('click', loadGame, { once: true });
 
         // Prevent the page from scrolling when the spacebar is pressed, but still forward the
         // event to the TIC-80 runtime so that a space character is inserted in the editor.
