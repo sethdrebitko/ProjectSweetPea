@@ -47,10 +47,22 @@
 
         const gameFrame = document.getElementById('game-frame')
 
+        function resumeAudio() {
+            var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }
+
         gameFrame.addEventListener('click', function() {
             let scriptTag = document.createElement('script'), // create a script tag
             firstScriptTag = document.getElementsByTagName('script')[0]; // find the first script tag in the document
             scriptTag.src = 'tic80.js'; // set the source of the script to your script
+            scriptTag.onload = function() {
+                resumeAudio();
+                window.addEventListener('touchend', resumeAudio, { once: true });
+                window.addEventListener('mousedown', resumeAudio, { once: true });
+            };
             firstScriptTag.parentNode.insertBefore(scriptTag, firstScriptTag); // append the script to the DOM
             this.remove()
         });
