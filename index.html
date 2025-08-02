@@ -24,113 +24,62 @@
 
     <div class="game" style="margin: 0; position: relative; background: #1a1c2c;">
 
-        <div id="game-frame" style="cursor: pointer; position: absolute; margin: 0 auto; opacity: 1; background: #1a1c2c; width: 100%; height: 100%;">
-            <div style="text-align: center; color: white; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
-                <p style="margin: 0;">- CLICK TO PLAY -</p>
-            </div>
+        <div class="container">
 
-        </div>
 
-        <canvas style="width: 100%; /* height: 100%; */ margin: 0 auto; display: block; image-rendering: pixelated;" id="canvas" oncontextmenu="event.preventDefault()" onmousedown="window.focus()"></canvas>
-    </div>
+	<h1>Create Your Game</h1>
+	<hr>
 
-    <div id="add-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times</span>
-            <p>Select a file to add to the computer</p>
-            <p><input type="file" id="upload-input"></input></p>
-        </div>
-    </div>
+	<h2>In the Browser</h2>
+	<div style="width: 100%; overflow: hidden;" id="game-border">
+	<div style="width: 100%; height: 100%; background-color: #1a1c2c; cursor: pointer; text-align: center; color: white; display: flex; justify-content: center; align-items: center; " id="game-cover">
 
-    <script type="text/javascript">
-        var Module = {canvas: document.getElementById('canvas')}
+		
 
-        const gameFrame = document.getElementById('game-frame')
+		<div style="font-size: 34px; position: absolute;">- CLICK TO PLAY -</div>
 
-        // Attempt to resume the TIC-80 audio context.  If the context isn't
-        // ready yet or remains suspended, listen for another user gesture and
-        // try again.
-        function tryResumeAudio() {
-            var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
-            if (ctx && ctx.state === 'suspended') {
-                ctx.resume();
-            }
-            if (!ctx || ctx.state === 'suspended') {
-                document.addEventListener('pointerdown', tryResumeAudio, {
-                    once: true,
-                    passive: true
-                });
-            }
-        }
+	</div>
 
-        function loadGame() {
-            let scriptTag = document.createElement('script'), // create a script tag
-            firstScriptTag = document.getElementsByTagName('script')[0]; // find the first script tag in the document
-            scriptTag.src = 'tic80.js'; // set the source of the script to your script
-            scriptTag.onload = tryResumeAudio;
-            firstScriptTag.parentNode.insertBefore(scriptTag, firstScriptTag); // append the script to the DOM
-            gameFrame.remove();
-        }
+	<canvas style="width: 100%; height: 100%; image-rendering: pixelated; display: none;" id="canvas" oncontextmenu="event.preventDefault()" onmousedown="window.focus()"></canvas>
+</div>
 
-        // Use pointerdown so trackpad taps and touch events trigger the loader.
-        gameFrame.addEventListener('pointerdown', loadGame, { once: true });
-        // Fallback for environments that only emit click events.
-        gameFrame.addEventListener('click', loadGame, { once: true });
+<div id="add-modal" class="modal">
+	<div class="modal-content">
+		<span class="close">&times</span>
+		<p>Select a file to add to the computer</p>
+		<p><input type="file" id="upload-input"></input></p>
+	</div>
+</div>
 
-        // Prevent the page from scrolling when the spacebar is pressed, but still forward the
-        // event to the TIC-80 runtime so that a space character is inserted in the editor.
-        document.addEventListener('keydown', function (event) {
-            if (event.code === 'Space' && document.activeElement === document.body) {
-                // Stop the browser from scrolling the page.
-                event.preventDefault();
+<script type="text/javascript">
+	var Module = 
+	{
+		canvas: document.getElementById('canvas')
+		
+	}
 
-                // Re-emit a synthetic "keypress" event so that the TIC-80 runtime receives the
-                // printable space character it expects.  This mirrors a regular keypress where
-                // key === " " and charCode === 32.
-                const keypress = new KeyboardEvent('keypress', {
-                    key: ' ',
-                    code: 'Space',
-                    charCode: 32,
-                    keyCode: 32,
-                    which: 32,
-                    bubbles: true,
-                    cancelable: true
-                });
-                document.dispatchEvent(keypress);
-            }
-        }, { capture: true });
+	function resize()
+	{
+		let gameBorder = document.getElementById('game-border');
+		gameBorder.style.height = gameBorder.clientWidth * 144 / 256 + 'px';
+	}
 
-        // --- NEW: Dynamically resize the TIC-80 canvas to keep its 240×136 aspect ratio ---
-        (function () {
-            const ASPECT = 240 / 136; // TIC-80 internal resolution aspect ratio (~16:9)
-            const canvas   = Module.canvas;
-            const container = canvas.parentElement; // the ".game" wrapper
+	resize();
 
-            function resize() {
-                const availW = container.clientWidth;
-                const availH = container.clientHeight;
+	document.getElementById('game-cover').addEventListener('click', function()
+	{
+		document.getElementById('canvas').style.display = 'block'
 
-                // Compute the largest size that fits while preserving aspect ratio
-                let newW = availW;
-                let newH = newW / ASPECT;
-                if (newH > availH) {
-                    newH = availH;
-                    newW = newH * ASPECT;
-                }
+        let scriptTag = document.createElement('script'),
+        firstScriptTag = document.getElementsByTagName('script')[0];
 
-                // Apply size & centre the canvas
-                canvas.style.width  = newW + 'px';
-                canvas.style.height = newH + 'px';
-                canvas.style.position = 'absolute';
-                canvas.style.left = ((availW - newW) / 2) + 'px';
-                canvas.style.top  = ((availH - newH) / 2) + 'px';
-            }
+        scriptTag.src = '/js/1.1.2837/tic80.js?1.1.2837';
+        firstScriptTag.parentNode.insertBefore(scriptTag, firstScriptTag);
 
-            // Initial call and bind events
-            resize();
-            window.addEventListener('resize', resize);
-            window.addEventListener('orientationchange', resize);
-        })();
-    </script>
+		this.remove();
+	})
+
+	window.addEventListener('resize', resize);
+</script>
 </body>
 </html>
