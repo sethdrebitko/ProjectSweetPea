@@ -1,0 +1,23 @@
+{
+  "filename": "api.h",
+  "file_type": "header",
+  "primary_purpose": "Defines full public scripting API for TIC-80, callback types, runtime memory layout (tic_mem), and core lifecycle/utility functions.",
+  "key_structures": [
+    {"name": "RemapResult", "type": "struct", "description": "Result of tile remap callback containing sprite index and transform info.", "dependencies": ["tic_flip", "tic_rotate"]},
+    {"name": "tic_tick_data", "type": "struct", "description": "Holds host callbacks (trace/error/exit), timing function pointers, and user data passed to each tick.", "dependencies": ["TraceOutput", "CounterCallback"]},
+    {"name": "tic_blit_callback", "type": "struct", "description": "Scanline, border, and menu draw callbacks with user data used during blitting.", "dependencies": ["tic_scanline", "tic_border"]},
+    {"name": "tic_mem", "type": "struct", "description": "Root runtime memory handle combining `tic80` product struct, pointer to RAM, cartridge data, input masks, etc.", "dependencies": ["tic80", "tic_ram", "tic_cartridge"]}
+  ],
+  "public_api": [
+    {"name": "TIC_API_LIST", "signature": "Macro generating ~70 individual tic_api_* functions (print, cls, pix, line, rect, spr, btn, btnp, sfx, map, etc.)", "purpose": "Defines the scripting API callable from Lua/Fennel/JS/etc."},
+    {"name": "tic_core_create", "signature": "tic_mem* tic_core_create(s32 samplerate, tic80_pixel_color_format format)", "purpose": "Create fully initialised core memory and engine state."},
+    {"name": "tic_core_tick", "signature": "void tic_core_tick(tic_mem* memory, tic_tick_data* data)", "purpose": "Execute one frame, including script, audio, and rendering."},
+    {"name": "tic_core_tick_start/end", "signature": "void tic_core_tick_start/End(tic_mem*)", "purpose": "Setup and teardown around frame execution, internal."},
+    {"name": "tic_core_blit", "signature": "void tic_core_blit(tic_mem* tic)", "purpose": "Convert VRAM pixels to frame buffer format."}
+  ],
+  "memory_regions": [
+    {"name": "tic_mem.ram", "size": "96 KB", "purpose": "Runtime RAM including VRAM, map, sprite, sound, etc."},
+    {"name": "tic_mem.cart", "size": "varies", "purpose": "Loaded cartridge data (code, assets)."}
+  ],
+  "swift_conversion_priority": "critical",
+  "notes": "api.h enumerates dozens of drawing and utility functions; Swift layer will expose these via SpriteKit-friendly wrappers or through scripting bridge (JavaScriptCore/Lua). Many functions map one-to-one with Core graphics routines already covered; not all need direct Swift API if scripting will remain in Lua."}

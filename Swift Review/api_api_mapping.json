@@ -1,0 +1,61 @@
+{
+  "filename": "api.h",
+  "api_mappings": [
+    {
+      "c_function": "tic_api_print",
+      "c_signature": "s32 tic_api_print(tic_mem* tic, const char* text, s32 x, s32 y, u8 color, bool fixed, s32 scale, bool alt)",
+      "swift_equivalent": "TICAPI.print(text:x:y:color:fixed:scale:smallFont:)",
+      "spritekit_approach": "Use SKLabelNode or draw glyphs into texture atlas when fixed width required.",
+      "implementation_notes": "For performance, batch glyphs into one SKTexture region updated per frame.",
+      "complexity": "moderate"
+    },
+    {
+      "c_function": "tic_api_spr",
+      "c_signature": "void tic_api_spr(tic_mem* tic, s32 index, s32 x, s32 y, s32 w, s32 h, u8* trans_colors, u8 trans_count, s32 scale, tic_flip flip, tic_rotate rot)",
+      "swift_equivalent": "TICAPI.drawSprite(id:x:y:width:height:scale:flip:rotate:palette:)",
+      "spritekit_approach": "Map each sprite id to SKTexture; use SKSpriteNode with transform properties.",
+      "implementation_notes": "Rotation limited to multiples of 90°, can swap textureHandles.",
+      "complexity": "complex"
+    },
+    {
+      "c_function": "tic_api_btn",
+      "c_signature": "u32 tic_api_btn(tic_mem* tic, s32 id)",
+      "swift_equivalent": "TICAPI.isButtonPressed(_ id:)",
+      "spritekit_approach": "Use GCController or custom input mapping; convert to tic80_gamepads bits.",
+      "implementation_notes": "Swift layer translates GameController input to TIC internal bitfields.",
+      "complexity": "simple"
+    },
+    {
+      "c_function": "tic_api_sfx",
+      "c_signature": "void tic_api_sfx(tic_mem*, s32 index, s32 note, s32 octave, s32 duration, s32 channel, s32 volumeLeft, s32 volumeRight, s32 speed)",
+      "swift_equivalent": "TICAPI.playSfx(id:note:duration:channel:volume:speed:)",
+      "spritekit_approach": "Forward to underlying C engine; AudioKit handles final mixing.",
+      "implementation_notes": "Need bridging for note parsing when passed as string in scripting languages; for Swift high-level convenience convert notes.",
+      "complexity": "moderate"
+    },
+    {
+      "c_function": "tic_core_tick",
+      "c_signature": "void tic_core_tick(tic_mem* memory, tic_tick_data* data)",
+      "swift_equivalent": "TICCore.tick(data:)",
+      "spritekit_approach": "Central per-frame driver called from GameScene.update.",
+      "implementation_notes": "Wrap in throwing Swift function to catch script errors via callback.",
+      "complexity": "complex"
+    }
+  ],
+  "data_structure_mappings": [
+    {"c_struct": "tic_mem", "swift_equivalent": "class", "properties": ["product", "ram", "cart"], "special_considerations": "96KB RAM pointer with alignment, keep in C."}
+  ],
+  "dependencies_needed": [
+    {"framework": "SpriteKit", "reason": "Sprite drawing and graphics output."},
+    {"framework": "AudioKit", "reason": "SFX playback and mixing."},
+    {"framework": "GameController", "reason": "Button input mapping."},
+    {"framework": "Foundation", "reason": "String handling, Data."}
+  ],
+  "implementation_order": [
+    "Bridge tic_core_create and basic tick loop",
+    "Map input (btn/key/mouse) to Swift controllers",
+    "Expose drawing helpers (spr, print, etc.) in Swift when needed",
+    "Integrate sprite atlas management",
+    "Audio SFX routing"
+  ]
+}
