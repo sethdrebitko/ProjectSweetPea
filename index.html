@@ -55,14 +55,26 @@
             this.remove()
         });
 
-        // Prevent the page from scrolling when the spacebar is pressed.
-        // This mainly affects Safari on iPad with an external keyboard, where the browser
-        // treats the <space> key as a PageUp/PageDown command if the body element owns the
-        // focus. By calling preventDefault() we allow the TIC-80 runtime to receive the
-        // key event and insert a space in the code editor instead.
+        // Prevent the page from scrolling when the spacebar is pressed, but still forward the
+        // event to the TIC-80 runtime so that a space character is inserted in the editor.
         document.addEventListener('keydown', function (event) {
             if (event.code === 'Space' && document.activeElement === document.body) {
+                // Stop the browser from scrolling the page.
                 event.preventDefault();
+
+                // Re-emit a synthetic "keypress" event so that the TIC-80 runtime receives the
+                // printable space character it expects.  This mirrors a regular keypress where
+                // key === " " and charCode === 32.
+                const keypress = new KeyboardEvent('keypress', {
+                    key: ' ',
+                    code: 'Space',
+                    charCode: 32,
+                    keyCode: 32,
+                    which: 32,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.dispatchEvent(keypress);
             }
         }, { capture: true });
     </script>
