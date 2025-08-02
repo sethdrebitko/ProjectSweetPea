@@ -54,6 +54,17 @@
             firstScriptTag.parentNode.insertBefore(scriptTag, firstScriptTag); // append the script to the DOM
             this.remove()
         });
+
+        // Prevent the page from scrolling when the spacebar is pressed.
+        // This mainly affects Safari on iPad with an external keyboard, where the browser
+        // treats the <space> key as a PageUp/PageDown command if the body element owns the
+        // focus. By calling preventDefault() we allow the TIC-80 runtime to receive the
+        // key event and insert a space in the code editor instead.
+        document.addEventListener('keydown', function (event) {
+            if (event.code === 'Space' && document.activeElement === document.body) {
+                event.preventDefault();
+            }
+        }, { capture: true });
     </script>
 </body>
 </html>
